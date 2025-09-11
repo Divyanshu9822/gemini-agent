@@ -23,6 +23,7 @@ from config import (
 from tools.base import ToolRegistry
 from tools.file_ops import FileOperationTools
 from tools.shell_exec import ShellOperationTools
+from tools.web_search import WebSearchTools
 
 
 class CodingAgent:
@@ -68,6 +69,10 @@ class CodingAgent:
         # Register shell operation tools
         shell_tools = ShellOperationTools(self.working_directory)
         shell_tools.register_all_tools(self.tool_registry)
+        
+        # Register web search tools
+        web_tools = WebSearchTools()
+        web_tools.register_all_tools(self.tool_registry)
     
     def load_history(self):
         """Load conversation history from file"""
@@ -309,6 +314,21 @@ class CodingAgent:
                 if stderr:
                     result_text += f"Error output:\n{stderr}\n"
                 result_text += f"Working directory: {result.get('working_directory', 'unknown')}"
+            elif tool_name == "web_search":
+                query = result.get('query', 'unknown')
+                results = result.get('results', [])
+                result_text = f"Web search results for '{query}':\n"
+                if results:
+                    for i, search_result in enumerate(results[:5], 1):  # Show top 5 results
+                        title = search_result.get('title', 'No title')
+                        description = search_result.get('description', 'No description')
+                        url = search_result.get('url', 'No URL')
+                        result_text += f"{i}. {title}\n"
+                        result_text += f"   {description}\n"
+                        result_text += f"   🔗 {url}\n\n"
+                else:
+                    result_text += "No search results found.\n"
+                result_text += f"Total results: {result.get('results_count', 0)}"
             else:
                 result_text = f"Tool {tool_name} completed: {result}"
         else:
